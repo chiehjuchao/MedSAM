@@ -1,3 +1,6 @@
+import time
+import json
+
 import gc
 import torch
 import numpy as np
@@ -35,6 +38,7 @@ class BboxPromptDemo:
         self.rect = None
         self.fig, self.axes = None, None
         self.segs = []
+        self.timestamps = {"first_click": None, "clear_clicked": None, "save_clicked": None}
 
     def _show(self, fig_size=5, random_color=True, alpha=0.65):
         assert self.image is not None, "Please set image first."
@@ -50,6 +54,9 @@ class BboxPromptDemo:
         self.axes.axis('off')
 
         def __on_press(event):
+            if event.inaxes == self.axes:
+                if self.timestamps["first_click"] is None:
+                    self.timestamps["first_click"] = time.time()
             if event.inaxes == self.axes:
                 self.x0 = float(event.xdata) 
                 self.y0 = float(event.ydata)
@@ -102,6 +109,7 @@ class BboxPromptDemo:
 
         clear_button = widgets.Button(description="clear")
         def __on_clear_button_clicked(b):
+            self.timestamps["clear_clicked"] = time.time()
             for i in range(len(self.axes.images)):
                 self.axes.images[0].remove()
             self.axes.clear()
@@ -114,6 +122,10 @@ class BboxPromptDemo:
 
         save_button = widgets.Button(description="save")
         def __on_save_button_clicked(b):
+            self.timestamps["save_clicked"] = time.time()
+            with open("timestamps.json", "w") as f:
+            json.dump(self.timestamps, f)
+            print("Timestamps saved to timestamps.json")
             plt.savefig("seg_result.png", bbox_inches='tight', pad_inches=0)
             if len(self.segs) > 0:
                 save_seg = np.zeros_like(self.segs[0])
