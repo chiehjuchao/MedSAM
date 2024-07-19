@@ -49,6 +49,7 @@ class BboxPromptDemo:
         }
         self.image_files = []
         self.current_image_index = 0
+        self.clear_click_count = 0
     
     def setup_directory_navigation(self, image_path):
         directory = os.path.dirname(image_path)
@@ -159,6 +160,7 @@ class BboxPromptDemo:
         clear_button = widgets.Button(description="clear")
         
         def __on_clear_button_clicked(b):
+            self.clear_click_count += 1
             if self.timestamps["first_clear_clicked"] is None:
                 self.timestamps["first_clear_clicked"] = time.time()
             elif self.timestamps["second_clear_clicked"] is None:
@@ -172,21 +174,25 @@ class BboxPromptDemo:
                 self.axes.patches[0].remove()
             self.segs = []
             self.fig.canvas.draw_idle()
+            clear_button.on_click(__on_clear_button_clicked)
 
         save_button = widgets.Button(description="save")
         def __on_save_button_clicked(b):
             self.timestamps["save_clicked"] = time.time()
-            if self.image_path:
-                base_filename = os.path.splitext(os.path.basename(self.image_path))[0]
-                timestamps_filename = f"{base_filename}_timestamps.json"
-                with open(timestamps_filename, "w") as f:
-                    json.dump(self.timestamps, f)
-                print(f"Timestamps saved to {timestamps_filename}")
-            else:
-                print("No image loaded, cannot save timestamps.")
-            with open("timestamps.json", "w") as f:
-                json.dump(self.timestamps, f)
-            print("Timestamps saved to timestamps.json")
+        # Prepare data to save, including the clear click count
+        data_to_save = {
+        "timestamps": self.timestamps,
+        "clear_click_count": self.clear_click_count
+        }
+    
+    if self.image_filename_stem:
+        timestamps_filename = f"{self.image_filename_stem}_timestamps.json"
+        with open(timestamps_filename, "w") as f:
+            json.dump(data_to_save, f, indent=4)  # Saving the data with indentation for readability
+        print(f"Timestamps and clear click count saved to {timestamps_filename}")
+    else:
+        print("No image filename available, cannot save timestamps and clear click count.")
+
             plt.savefig("seg_result.png", bbox_inches='tight', pad_inches=0)
             if len(self.segs) > 0:
                 save_seg = np.zeros_like(self.segs[0])
