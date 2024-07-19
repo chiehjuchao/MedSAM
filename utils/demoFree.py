@@ -4,7 +4,6 @@ import numpy as np
 import cv2
 from IPython.display import display
 import ipywidgets as widgets
-from copy import deepcopy
 from datetime import datetime
 
 class FreehandTraceDemo:
@@ -31,18 +30,15 @@ class FreehandTraceDemo:
         clear_button = widgets.Button(description="Clear")
         save_button = widgets.Button(description="Save")
 
-        def __on_press(event):
+        def __on_click(event):
             if event.inaxes == self.axes:
                 self.verts.append((event.xdata, event.ydata))
-                if len(self.verts) > 1:
-                    self.polygon.set_xy(self.verts + [self.verts[0]])
+                if self.polygon:
+                    self.polygon.set_xy(self.verts + [self.verts[0]])  # Update polygon shape
                 else:
-                    self.polygon = Polygon(self.verts, fill=None, edgecolor='r')
+                    # Create polygon if it doesn't exist yet
+                    self.polygon = Polygon(self.verts + [self.verts[0]], closed=True, fill=True, facecolor='red', alpha=0.5, edgecolor='r')
                     self.axes.add_patch(self.polygon)
-
-        def __on_release(event):
-            if event.inaxes == self.axes and len(self.verts) > 0:
-                self.polygon.set_xy(self.verts + [self.verts[0]])
 
         def __on_clear_button_clicked(b):
             self.verts = []
@@ -64,8 +60,7 @@ class FreehandTraceDemo:
         clear_button.on_click(__on_clear_button_clicked)
         save_button.on_click(__on_save_button_clicked)
 
-        self.fig.canvas.mpl_connect('button_press_event', __on_press)
-        self.fig.canvas.mpl_connect('button_release_event', __on_release)
+        self.fig.canvas.mpl_connect('button_press_event', __on_click)
 
         plt.show()
 
