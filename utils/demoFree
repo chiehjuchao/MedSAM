@@ -1,0 +1,85 @@
+import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon
+import numpy as np
+import cv2
+from IPython.display import display
+import ipywidgets as widgets
+from copy import deepcopy
+from datetime import datetime
+
+class FreehandTraceDemo:
+    def __init__(self):
+        self.image = None
+        self.fig, self.axes = None, None
+        self.polygon = None
+        self.verts = []
+        self.clear_count = 0
+        self.start_time = None
+        self.end_time = None
+
+    def _show(self, fig_size=5):
+        assert self.image is not None, "Please set image first."
+        self.fig, self.axes = plt.subplots(1, figsize=(fig_size, fig_size))
+        self.fig.canvas.header_visible = False
+        self.fig.canvas.footer_visible = False
+        self.fig.canvas.toolbar_visible = False
+        self.fig.canvas.resizable = False
+        plt.tight_layout()
+        self.axes.imshow(self.image)
+        self.axes.axis('off')
+
+        clear_button = widgets.Button(description="Clear")
+        save_button = widgets.Button(description="Save")
+
+        def __on_press(event):
+            if event.inaxes == self.axes:
+                self.verts.append((event.xdata, event.ydata))
+                if len(self.verts) > 1:
+                    self.polygon.set_xy(self.verts + [self.verts[0]])
+                else:
+                    self.polygon = Polygon(self.verts, fill=None, edgecolor='r')
+                    self.axes.add_patch(self.polygon)
+
+        def __on_release(event):
+            if event.inaxes == self.axes and len(self.verts) > 0:
+                self.polygon.set_xy(self.verts + [self.verts[0]])
+
+        def __on_clear_button_clicked(b):
+            self.verts = []
+            if self.polygon:
+                self.polygon.remove()
+                self.polygon = None
+            self.clear_count += 1
+            self.axes.clear()
+            self.axes.imshow(self.image)
+            self.axes.axis('off')
+            self.fig.canvas.draw_idle()
+
+        def __on_save_button_clicked(b):
+            self.end_time = datetime.now()
+            plt.savefig("trace_result.png", bbox_inches='tight', pad_inches=0)
+            print(f"Polygon tracing saved. Start time: {self.start_time}, End time: {self.end_time}, Clears: {self.clear_count}")
+
+        display(clear_button, save_button)
+        clear_button.on_click(__on_clear_button_clicked)
+        save_button.on_click(__on_save_button_clicked)
+
+        self.fig.canvas.mpl_connect('button_press_event', __on_press)
+        self.fig.canvas.mpl_connect('button_release_event', __on_release)
+
+        plt.show()
+
+        self.start_time = datetime.now()
+
+    def show(self, image_path, fig_size=5):
+        self.set_image_path(image_path)
+        self._show(fig_size=fig_size)
+
+    def set_image_path(self, image_path):
+        image = cv2.imread(image_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        self.image = image
+
+# Usage
+# demo = FreehandTraceDemo()
+# demo.show('path_to_image.jpg', fig_size=6)
