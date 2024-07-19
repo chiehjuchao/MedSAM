@@ -124,7 +124,7 @@ class BboxPromptDemo:
         def __on_save_button_clicked(b):
             self.timestamps["save_clicked"] = time.time()
             with open("timestamps.json", "w") as f:
-            json.dump(self.timestamps, f)
+                json.dump(self.timestamps, f)
             print("Timestamps saved to timestamps.json")
             plt.savefig("seg_result.png", bbox_inches='tight', pad_inches=0)
             if len(self.segs) > 0:
