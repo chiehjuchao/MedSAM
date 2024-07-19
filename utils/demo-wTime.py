@@ -47,10 +47,27 @@ class BboxPromptDemo:
             "second_clear_clicked": None,
             "first_save_clicked": None
         }
-
-    def set_image_path(self, image_path):
-        self.image_path = image_path 
+        self.image_files = []
+        self.current_image_index = 0
     
+    def setup_directory_navigation(self, image_path):
+        directory = os.path.dirname(image_path)
+        self.list_images(directory)  # Populate the list of image files
+        self.current_image_index = self.image_files.index(image_path) if image_path in self.image_files else 0
+        self.load_image(self.current_image_index)
+
+    def list_images(self, directory):
+        self.image_files = [os.path.join(directory, f) for f in os.listdir(directory) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+        self.image_files.sort()  # Sort the files alphabetically if desired
+
+    def load_image(self, index):
+        if 0 <= index < len(self.image_files):
+            image_path = self.image_files[index]
+            self.set_image_path(image_path)
+            self._show()  # Optionally adjust parameters if needed
+        else:
+            print("Image index out of range.")
+            
     def _show(self, fig_size=5, random_color=True, alpha=0.65):
         assert self.image is not None, "Please set image first."
 
@@ -63,6 +80,23 @@ class BboxPromptDemo:
         plt.tight_layout()
         self.axes.imshow(self.image)
         self.axes.axis('off')
+
+        prev_button = widgets.Button(description="Previous")
+        next_button = widgets.Button(description="Next")
+        prev_button.on_click(self.__on_prev_button_clicked)
+        next_button.on_click(self.__on_next_button_clicked)
+        button_box = widgets.HBox([prev_button, next_button])
+        display(button_box)
+
+    def __on_prev_button_clicked(self, b):
+        if self.current_image_index > 0:
+            self.current_image_index -= 1
+            self.load_image(self.current_image_index)
+
+    def __on_next_button_clicked(self, b):
+        if self.current_image_index < len(self.image_files) - 1:
+            self.current_image_index += 1
+            self.load_image(self.current_image_index)
 
         def __on_press(event):
             if event.inaxes == self.axes:
@@ -123,6 +157,7 @@ class BboxPromptDemo:
                     self.rect.set_height(rect_height)
 
         clear_button = widgets.Button(description="clear")
+        
         def __on_clear_button_clicked(b):
             if self.timestamps["first_clear_clicked"] is None:
                 self.timestamps["first_clear_clicked"] = time.time()
