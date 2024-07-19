@@ -30,6 +30,7 @@ class BboxPromptDemo:
         self.model = model
         self.model.eval()
         self.image = None
+        self.image_path = None
         self.image_embeddings = None
         self.img_size = None
         self.gt = None
@@ -40,6 +41,9 @@ class BboxPromptDemo:
         self.segs = []
         self.timestamps = {"first_click": None, "clear_clicked": None, "save_clicked": None}
 
+    def set_image_path(self, image_path):
+        self.image_path = image_path 
+    
     def _show(self, fig_size=5, random_color=True, alpha=0.65):
         assert self.image is not None, "Please set image first."
 
@@ -123,6 +127,14 @@ class BboxPromptDemo:
         save_button = widgets.Button(description="save")
         def __on_save_button_clicked(b):
             self.timestamps["save_clicked"] = time.time()
+            if self.image_path:
+                base_filename = os.path.splitext(os.path.basename(self.image_path))[0]
+                timestamps_filename = f"{base_filename}_timestamps.json"
+                with open(timestamps_filename, "w") as f:
+                    json.dump(self.timestamps, f)
+                print(f"Timestamps saved to {timestamps_filename}")
+            else:
+                print("No image loaded, cannot save timestamps.")
             with open("timestamps.json", "w") as f:
                 json.dump(self.timestamps, f)
             print("Timestamps saved to timestamps.json")
