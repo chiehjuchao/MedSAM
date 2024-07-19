@@ -39,7 +39,14 @@ class BboxPromptDemo:
         self.rect = None
         self.fig, self.axes = None, None
         self.segs = []
-        self.timestamps = {"first_click": None, "clear_clicked": None, "save_clicked": None}
+        self.timestamps = {
+            "first_click": None,
+            "second_click": None,
+            "third_click": None,
+            "first_clear_clicked": None,
+            "second_clear_clicked": None,
+            "first_save_clicked": None
+        }
 
     def set_image_path(self, image_path):
         self.image_path = image_path 
@@ -61,6 +68,10 @@ class BboxPromptDemo:
             if event.inaxes == self.axes:
                 if self.timestamps["first_click"] is None:
                     self.timestamps["first_click"] = time.time()
+                elif self.timestamps["second_click"] is None:
+                    self.timestamps["second_click"] = time.time()
+                elif self.timestamps["third_click"] is None:
+                    self.timestamps["third_click"] = time.time()
             if event.inaxes == self.axes:
                 self.x0 = float(event.xdata) 
                 self.y0 = float(event.ydata)
@@ -113,7 +124,10 @@ class BboxPromptDemo:
 
         clear_button = widgets.Button(description="clear")
         def __on_clear_button_clicked(b):
-            self.timestamps["clear_clicked"] = time.time()
+            if self.timestamps["first_clear_clicked"] is None:
+                self.timestamps["first_clear_clicked"] = time.time()
+            elif self.timestamps["second_clear_clicked"] is None:
+                self.timestamps["second_clear_clicked"] = time.time()
             for i in range(len(self.axes.images)):
                 self.axes.images[0].remove()
             self.axes.clear()
