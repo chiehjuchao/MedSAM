@@ -12,6 +12,7 @@ class FreehandTraceDemo:
         self.fig, self.axes = None, None
         self.polygon = None
         self.verts = []
+        self.point_markers = []
         self.clear_count = 0
         self.start_time = None
         self.end_time = None
@@ -32,7 +33,12 @@ class FreehandTraceDemo:
 
         def __on_click(event):
             if event.inaxes == self.axes:
+                # Add vertex
                 self.verts.append((event.xdata, event.ydata))
+                # Add a point marker
+                point, = self.axes.plot(event.xdata, event.ydata, marker='o', color='yellow')
+                self.point_markers.append(point)
+
                 if self.polygon:
                     self.polygon.set_xy(self.verts + [self.verts[0]])  # Update polygon shape
                 else:
@@ -42,6 +48,11 @@ class FreehandTraceDemo:
 
         def __on_clear_button_clicked(b):
             self.verts = []
+            # Remove all point markers
+            for point in self.point_markers:
+                point.remove()
+            self.point_markers = []
+            # Remove polygon
             if self.polygon:
                 self.polygon.remove()
                 self.polygon = None
