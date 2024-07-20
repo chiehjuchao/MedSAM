@@ -8,7 +8,6 @@ import cv2
 from torch.nn import functional as F
 from os import listdir, makedirs, getcwd
 from os.path import join, exists, isfile, isdir, basename
-from glob import glob
 import os
 from ipywidgets import interact, widgets, FileUpload
 from IPython.display import display
@@ -31,8 +30,7 @@ class BboxPromptDemo:
         self.model = model
         self.model.eval()
         self.directory_path = directory_path
-        # List all image files (you can add more formats if needed)
-        self.image_files = sorted(glob.glob(os.path.join(directory_path, '*.*')))  
+        self.image_files = self.list_images(self.directory_path)
         self.current_image_index = 0
         self.image = None
         self.image_path = None
