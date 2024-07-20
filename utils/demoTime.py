@@ -9,6 +9,7 @@ from torch.nn import functional as F
 from os import listdir, makedirs, getcwd
 from os.path import join, exists, isfile, isdir, basename
 from glob import glob
+import os
 from ipywidgets import interact, widgets, FileUpload
 from IPython.display import display
 from matplotlib import patches as patches
@@ -26,9 +27,13 @@ def show_mask(mask, ax, random_color=False, alpha=0.95):
 
 
 class BboxPromptDemo:
-    def __init__(self, model):
+    def __init__(self, model, directory_path):
         self.model = model
         self.model.eval()
+        self.directory_path = directory_path
+        # List all image files (you can add more formats if needed)
+        self.image_files = sorted(glob.glob(os.path.join(directory_path, '*.*')))  
+        self.current_image_index = 0
         self.image = None
         self.image_path = None
         self.image_embeddings = None
@@ -47,8 +52,6 @@ class BboxPromptDemo:
             "second_clear_clicked": None,
             "first_save_clicked": None
         }
-        self.image_files = []
-        self.current_image_index = 0
         self.clear_click_count = 0
     
     def setup_directory_navigation(self, image_path):
