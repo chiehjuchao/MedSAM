@@ -52,6 +52,10 @@ class BboxPromptDemo:
         }
         self.clear_click_count = 0
 
+    def list_images(self, directory_path):
+        files = os.listdir(directory_path)
+        return sorted([f for f in files if f.endswith(('.png', '.jpg', '.jpeg'))])
+           
     def load_image(self):
         """Load an image from a file and display it."""
         if self.image_files:
