@@ -53,24 +53,15 @@ class BboxPromptDemo:
             "first_save_clicked": None
         }
         self.clear_click_count = 0
-    
-    def setup_directory_navigation(self, image_path):
-        directory = os.path.dirname(image_path)
-        self.list_images(directory)  # Populate the list of image files
-        self.current_image_index = self.image_files.index(image_path) if image_path in self.image_files else 0
-        self.load_image(self.current_image_index)
 
-    def list_images(self, directory):
-        self.image_files = [os.path.join(directory, f) for f in os.listdir(directory) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
-        self.image_files.sort()  # Sort the files alphabetically if desired
-
-    def load_image(self, index):
-        if 0 <= index < len(self.image_files):
-            image_path = self.image_files[index]
-            self.set_image_path(image_path)
-            self._show()  # Optionally adjust parameters if needed
+    def load_image(self):
+        """Load an image from a file and display it."""
+        if self.image_files:
+            image_path = self.image_files[self.current_image_index]
+            self.image = plt.imread(image_path)
+            self.show_image()
         else:
-            print("Image index out of range.")
+            print("No images found in the directory.")
             
     def _show(self, fig_size=5, random_color=True, alpha=0.65):
         assert self.image is not None, "Please set image first."
@@ -84,13 +75,6 @@ class BboxPromptDemo:
         plt.tight_layout()
         self.axes.imshow(self.image)
         self.axes.axis('off')
-
-        #prev_button = widgets.Button(description="Previous")
-        #next_button = widgets.Button(description="Next")
-        #prev_button.on_click(self.__on_prev_button_clicked)
-        #next_button.on_click(self.__on_next_button_clicked)
-        #button_box = widgets.HBox([prev_button, next_button])
-        #display(button_box)
     
     def add_buttons(self):
         """Add navigation and action buttons below the figure."""
@@ -195,13 +179,16 @@ class BboxPromptDemo:
             clear_button.on_click(__on_clear_button_clicked)
 
         save_button = widgets.Button(description="save")
+        
         def __on_save_button_clicked(b):
             self.timestamps["save_clicked"] = time.time()
-        # Prepare data to save, including the clear click count
-        data_to_save = {
-        "timestamps": self.timestamps,
-        "clear_click_count": self.clear_click_count
-        }
+            # Prepare data to save, including the clear click count
+            data_to_save = {
+            "timestamps": self.timestamps,
+            "clear_click_count": self.clear_click_count
+            }
+            self.data_store[filename].append(data_to_save)
+            print(f"Data collected for {filename}. Total entries: {len(self.data_store[filename])}")
 
         plt.savefig("seg_result.png", bbox_inches='tight', pad_inches=0)
         if len(self.segs) > 0:
@@ -223,6 +210,13 @@ class BboxPromptDemo:
         display(save_button)
         save_button.on_click(__on_save_button_clicked)
 
+    def on_end_clicked(self, b):
+        """Save all collected data to a JSON file when ending the session."""
+        file_path = os.path.join(self.directory_path, "all_data.json")
+        with open(file_path, 'w') as f:
+            json.dump(self.data_store, f, indent=4)
+        print(f"All data saved to {file_path}. Session ended.")
+    
     def show(self, image_path, fig_size=5, random_color=True, alpha=0.65):
         self.set_image_path(image_path)
         self._show(fig_size=fig_size, random_color=random_color, alpha=alpha)
