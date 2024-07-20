@@ -85,11 +85,26 @@ class BboxPromptDemo:
         self.axes.imshow(self.image)
         self.axes.axis('off')
 
-        prev_button = widgets.Button(description="Previous")
+        #prev_button = widgets.Button(description="Previous")
+        #next_button = widgets.Button(description="Next")
+        #prev_button.on_click(self.__on_prev_button_clicked)
+        #next_button.on_click(self.__on_next_button_clicked)
+        #button_box = widgets.HBox([prev_button, next_button])
+        #display(button_box)
+    
+    def add_buttons(self):
+        """Add navigation and action buttons below the figure."""
+        previous_button = widgets.Button(description="Previous")
         next_button = widgets.Button(description="Next")
-        prev_button.on_click(self.__on_prev_button_clicked)
-        next_button.on_click(self.__on_next_button_clicked)
-        button_box = widgets.HBox([prev_button, next_button])
+        save_button = widgets.Button(description="Save")
+        clear_button = widgets.Button(description="Clear")
+        end_button = widgets.Button(description="End")
+        previous_button.on_click(self.on_previous_clicked)
+        next_button.on_click(self.on_next_clicked)
+        save_button.on_click(self.on_save_clicked)
+        clear_button.on_click(self.on_clear_clicked)
+        end_button.on_click(self.on_end_clicked)
+        button_box = widgets.HBox([previous_button, next_button, save_button, clear_button, end_button])
         display(button_box)
 
     def __on_prev_button_clicked(self, b):
