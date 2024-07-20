@@ -211,13 +211,13 @@ class BboxPromptDemo:
     else:
         print("No image filename available, cannot save timestamps and clear click count.")
 
-            plt.savefig("seg_result.png", bbox_inches='tight', pad_inches=0)
-            if len(self.segs) > 0:
-                save_seg = np.zeros_like(self.segs[0])
-                for i, seg in enumerate(self.segs, start=1):
-                    save_seg[seg > 0] = i
-                cv2.imwrite("segs.png", save_seg)
-                print(f"Segmentation result saved to {getcwd()}")
+        plt.savefig("seg_result.png", bbox_inches='tight', pad_inches=0)
+        if len(self.segs) > 0:
+            save_seg = np.zeros_like(self.segs[0])
+            for i, seg in enumerate(self.segs, start=1):
+                save_seg[seg > 0] = i
+            cv2.imwrite("segs.png", save_seg)
+            print(f"Segmentation result saved to {getcwd()}")
         
         display(clear_button)
         clear_button.on_click(__on_clear_button_clicked)
