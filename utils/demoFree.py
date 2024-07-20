@@ -1,91 +1,65 @@
 import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon
 import numpy as np
-import cv2
-from IPython.display import display
-import ipywidgets as widgets
-from datetime import datetime
+import time
+import json
+import os
+from matplotlib.widgets import Button
 
-class FreehandTraceDemo:
+class FreehandPolygonDemo:
     def __init__(self):
         self.image = None
-        self.fig, self.axes = None, None
-        self.polygon = None
-        self.verts = []
-        self.point_markers = []
-        self.clear_count = 0
-        self.start_time = None
-        self.end_time = None
+        self.fig, self.ax = None, None
+        self.polygon = []
+        self.timestamps = {
+            "first_click": None,
+            "save_clicked": None
+        }
 
-    def _show(self, fig_size=5):
-        assert self.image is not None, "Please set image first."
-        self.fig, self.axes = plt.subplots(1, figsize=(fig_size, fig_size))
-        self.fig.canvas.header_visible = False
-        self.fig.canvas.footer_visible = False
-        self.fig.canvas.toolbar_visible = False
-        self.fig.canvas.resizable = False
-        plt.tight_layout()
-        self.axes.imshow(self.image)
-        self.axes.axis('off')
+    def load_image(self, image_path):
+        self.image = plt.imread(image_path)
+        self.show()
 
-        clear_button = widgets.Button(description="Clear")
-        save_button = widgets.Button(description="Save")
-
-        def __on_click(event):
-            if event.inaxes == self.axes:
-                # Add vertex
-                self.verts.append((event.xdata, event.ydata))
-                # Add a point marker
-                point, = self.axes.plot(event.xdata, event.ydata, marker='o', color='yellow')
-                self.point_markers.append(point)
-
-                if self.polygon:
-                    self.polygon.set_xy(self.verts + [self.verts[0]])  # Update polygon shape
-                else:
-                    # Create polygon if it doesn't exist yet
-                    self.polygon = Polygon(self.verts + [self.verts[0]], closed=True, fill=True, facecolor='red', alpha=0.5, edgecolor='r')
-                    self.axes.add_patch(self.polygon)
-
-        def __on_clear_button_clicked(b):
-            self.verts = []
-            # Remove all point markers
-            for point in self.point_markers:
-                point.remove()
-            self.point_markers = []
-            # Remove polygon
-            if self.polygon:
-                self.polygon.remove()
-                self.polygon = None
-            self.clear_count += 1
-            self.axes.clear()
-            self.axes.imshow(self.image)
-            self.axes.axis('off')
-            self.fig.canvas.draw_idle()
-
-        def __on_save_button_clicked(b):
-            self.end_time = datetime.now()
-            plt.savefig("trace_result.png", bbox_inches='tight', pad_inches=0)
-            print(f"Polygon tracing saved. Start time: {self.start_time}, End time: {self.end_time}, Clears: {self.clear_count}")
-
-        display(clear_button, save_button)
-        clear_button.on_click(__on_clear_button_clicked)
-        save_button.on_click(__on_save_button_clicked)
-
-        self.fig.canvas.mpl_connect('button_press_event', __on_click)
-
+    def show(self):
+        self.fig, self.ax = plt.subplots()
+        self.ax.imshow(self.image)
+        self.ax.axis('off')
+        self.fig.canvas.mpl_connect('button_press_event', self.on_press)
+        self.fig.canvas.mpl_connect('button_release_event', self.on_release)
+        
+        save_btn_ax = self.fig.add_axes([0.81, 0.05, 0.1, 0.075])
+        save_button = Button(save_btn_ax, 'Save')
+        save_button.on_clicked(self.on_save_clicked)
+        
         plt.show()
 
-        self.start_time = datetime.now()
+    def on_press(self, event):
+        if event.inaxes != self.ax: return  # Ignore clicks outside the axes
+        if self.timestamps["first_click"] is None:
+            self.timestamps["first_click"] = time.time()
+        self.polygon.append((event.xdata, event.ydata))
+        self.ax.plot(event.xdata, event.ydata, 'ro-')  # Mark the point
+        self.fig.canvas.draw()
 
-    def show(self, image_path, fig_size=5):
-        self.set_image_path(image_path)
-        self._show(fig_size=fig_size)
+    def on_release(self, event):
+        if len(self.polygon) > 1:
+            x, y = zip(*self.polygon)
+            self.ax.plot(x, y, 'r-')  # Draw lines between points
+            self.fig.canvas.draw()
 
-    def set_image_path(self, image_path):
-        image = cv2.imread(image_path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        self.image = image
+    def on_save_clicked(self, event):
+        self.timestamps["save_clicked"] = time.time()
+        self.save_data()
 
-# Usage
-# demo = FreehandTraceDemo()
-# demo.show('path_to_image.jpg', fig_size=6)
+    def save_data(self):
+        file_path = os.path.join(os.getcwd(), "polygon_data.json")
+        data = {
+            "polygon": self.polygon,
+            "timestamps": self.timestamps
+        }
+        with open(file_path, 'w') as f:
+            json.dump(data, f, indent=4)
+        print(f"Data saved to {file_path}")
+
+# Example usage:
+demo = FreehandPolygonDemo()
+demo.load_image("path_to_your_image.jpg")
