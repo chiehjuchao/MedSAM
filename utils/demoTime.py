@@ -202,14 +202,6 @@ class BboxPromptDemo:
         "timestamps": self.timestamps,
         "clear_click_count": self.clear_click_count
         }
-    
-    if self.image_filename_stem:
-        timestamps_filename = f"{self.image_filename_stem}_timestamps.json"
-        with open(timestamps_filename, "w") as f:
-            json.dump(data_to_save, f, indent=4)  # Saving the data with indentation for readability
-        print(f"Timestamps and clear click count saved to {timestamps_filename}")
-    else:
-        print("No image filename available, cannot save timestamps and clear click count.")
 
         plt.savefig("seg_result.png", bbox_inches='tight', pad_inches=0)
         if len(self.segs) > 0:
